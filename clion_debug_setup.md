@@ -23,11 +23,11 @@ find /opt -name "arm-none-eabi-gdb" 2>/dev/null
 - ST-Link 通过 SWD 接口连接到 STM32 开发板
 - 开发板正常供电
 
-## 配置一：调试配置（🐛 调试按钮）
+## 调试配置（🐛 调试按钮）
 
-### 1. 创建调试配置
+### 1. 创建 OpenOCD 下载并运行配置
 1. 打开 `Run → Edit Configurations...`
-2. 点击 `+` → `Embedded GDB Server`
+2. 点击 `+` → `OpenOCD Download & Run`
 3. 配置如下：
 
 **基本信息**：
@@ -35,24 +35,14 @@ find /opt -name "arm-none-eabi-gdb" 2>/dev/null
 - Target: `stm32`
 - Executable: `stm32`
 
-**GDB Server 配置**：
-- GDB Server: `/opt/homebrew/bin/openocd`
-- GDB Server args: `-f stm32f103ze_stlink.cfg`
-- Working directory: `$ProjectFileDir$`
+**OpenOCD 配置**：
+- Board config file: `/完整路径/stm32f103ze_stlink.cfg`
+- Download: ✅ （勾选，这样会自动下载程序到芯片）
+- Reset after download: ✅ （勾选，下载后复位芯片）
 
-**Debugger 配置**：
+**GDB 配置**：
 - GDB: `/opt/ST/STM32CubeCLT_1.18.0/GNU-tools-for-STM32/bin/arm-none-eabi-gdb`
   （路径请根据实际安装位置调整）
-- 'target remote' args: `tcp:localhost:3333`
-
-**Startup Commands**（在 "Startup Commands" 标签页）：
-```
-monitor reset halt
-load
-monitor reset halt
-break main
-continue
-```
 
 ### 2. 调试使用方法
 1. 连接 ST-Link 到电脑和开发板
@@ -62,28 +52,6 @@ continue
    - 启动 OpenOCD 服务器
    - 烧录程序到 STM32
    - 在 main 函数处设置断点并停止
-
-## 配置二：烧录配置（▶️ 运行按钮）
-
-### 1. 创建 External Tool 配置
-1. 打开 `Run → Edit Configurations...`
-2. 点击 `+` → `External Tool`
-3. 配置如下：
-
-**Tool Settings**：
-- Name: `Flash STM32`
-- Program: `/opt/homebrew/bin/openocd`
-- Arguments: `-f stm32f103ze_stlink.cfg -c "init; reset halt; flash write_image erase build/Debug/stm32.elf; reset run; exit"`
-- Working directory: `$ProjectFileDir$`
-
-**Advanced Options**：
-- ✅ Make console active on message in stdout
-- ✅ Make console active on message in stderr
-
-### 2. 烧录使用方法
-1. 确保项目已编译
-2. 点击运行按钮（▶️）或按 `Shift+F10`
-3. 程序会烧录到 STM32 并立即开始运行（不调试）
 
 ## 配置文件说明
 
@@ -102,17 +70,21 @@ reset_config srst_only srst_nogate
 
 ### 1. "找不到 cfg 文件"
 - 确保 `stm32f103ze_stlink.cfg` 在项目根目录
-- 在配置中使用绝对路径：`$ProjectFileDir$/stm32f103ze_stlink.cfg`
+- 使用绝对路径：`/完整路径/stm32f103ze_stlink.cfg`
 
 ### 2. "连接失败"
 ```bash
 # 测试 ST-Link 连接
-openocd -f interface/stlink.cfg -f target/stm32f1x.cfg -c "init; exit"
+openocd -f stm32f103ze_stlink.cfg -c "init; exit"
 ```
 
-### 3. "GDB 无法连接"
-- 检查端口 3333 是否被占用：`lsof -i :3333`
-- 确认 OpenOCD 是否正常启动并监听 3333 端口
+### 3. "OpenOCD Download & Run 找不到"
+- 确保 CLion 版本支持该功能（较新版本）
+- 如果没有此选项，使用 External Tool 配置
+
+### 4. "Board config file 相对路径不工作"
+- 使用绝对路径代替相对路径
+- 确保 Working directory 设置正确
 
 ### 4. "权限问题"
 ```bash
@@ -145,11 +117,36 @@ set(CMAKE_C_FLAGS_DEBUG "-O0 -g3")
 
 ## 高级配置
 
-### 添加 SVD 文件支持（可选）
-下载 STM32F103 的 SVD 文件，在调试配置中添加：
-- SVD File: 指向 STM32F103xx.svd 文件路径
+### 添加 SVD 文件支持（强烈推荐）
 
-这样可以在调试时查看外设寄存器的详细信息。
+项目中已包含 `STM32F103.svd` 文件。在调试配置中添加：
+
+**在 OpenOCD Download & Run 配置中**：
+- SVD File: `$ProjectFileDir$/STM32F103_Custom.svd`
+  
+**注意**: 项目包含两个 SVD 文件：
+- `STM32F103.svd` - 标准 SVD 文件  
+- `STM32F103_Custom.svd` - 包含引脚标签信息的自定义 SVD 文件（推荐使用）
+
+**SVD 文件的好处**：
+1. **外设寄存器可视化**：在 Peripherals 窗口查看所有外设寄存器
+2. **位字段解析**：显示寄存器位的含义，不是原始数字
+3. **实时监控**：调试时实时查看外设状态变化
+4. **寄存器修改**：可以直接修改寄存器值进行测试
+
+**使用方法**：
+1. 调试时打开 `View → Tool Windows → Peripherals`
+2. 展开外设树形菜单（如 GPIOB, TIM2, USART1 等）
+3. 实时查看寄存器值和位字段状态
+
+**例如查看 GPIO 状态**：
+```
+GPIOB
+├── MODER   = 0x00000400  (Pin 5: Output mode)
+├── ODR     = 0x0020      (Pin 5: High)
+├── IDR     = 0x0000      (Input data)
+└── BSRR    = 0x00000000  (Bit set/reset)
+```
 
 ## 验证配置
 

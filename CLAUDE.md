@@ -63,25 +63,25 @@ The project uses CMake with a custom ARM toolchain file (`cmake/gcc-arm-none-eab
 
 ## CLion IDE Configuration
 
-### Debug Configuration (🐛 button)
-**Type**: Embedded GDB Server
-- GDB Server: `/opt/homebrew/bin/openocd`
-- GDB Server args: `-f stm32f103ze_stlink.cfg`
+### Debug Configuration
+**Type**: OpenOCD Download & Run
+- Board config file: `$ProjectFileDir$/stm32f103ze_stlink.cfg`
+- Download: ✅ (auto-download to chip)
+- Reset after download: ✅ (reset after download)
 - GDB: `/opt/ST/STM32CubeCLT_*/GNU-tools-for-STM32/bin/arm-none-eabi-gdb`
-- Target remote: `tcp:localhost:3333`
-- Startup Commands:
-  ```
-  monitor reset halt
-  load
-  monitor reset halt
-  break main
-  continue
-  ```
 
-### Flash Configuration (▶️ button)
-**Type**: External Tool
-- Program: `/opt/homebrew/bin/openocd`
-- Arguments: `-f stm32f103ze_stlink.cfg -c "init; reset halt; flash write_image erase build/Debug/stm32.elf; reset run; exit"`
+### IDE Support
+This project supports both **CLion** and **VS Code**:
+
+**CLion Users**:
+- Use configurations in `.idea/runConfigurations/`
+- Debug with "OpenOCD Download & Run" 
+- Flash with "External Tool"
+
+**VS Code Users**:  
+- Install "Cortex-Debug" extension
+- Use configurations in `.vscode/launch.json`
+- Requires manual OpenOCD installation
 
 ### Prerequisites for CLion
 ```bash

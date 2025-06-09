@@ -32,10 +32,14 @@ compile_commands.json
 
 # IDE
 .idea/
-.vscode/
+# .vscode/  # Uncomment this line if you don't want to share VS Code configs
 *.swp
 *.swo
 *~
+
+# IDE specific user settings (keep project configs, ignore user settings)
+.vscode/settings.json
+.vscode/launch.json.user
 
 # Logs
 *.log

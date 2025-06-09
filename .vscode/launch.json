@@ -1,0 +1,36 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "STM32 Debug (OpenOCD)",
+            "type": "cortex-debug",
+            "request": "launch",
+            "servertype": "openocd",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/Debug/stm32.elf",
+            "configFiles": [
+                "${workspaceFolder}/stm32f103ze_stlink.cfg"
+            ],
+            "svdFile": "${workspaceFolder}/STM32F103_Custom.svd",
+            "runToEntryPoint": "main",
+            "preLaunchTask": "Build STM32",
+            "showDevDebugOutput": "raw"
+        },
+        {
+            "name": "STM32 Flash Only",
+            "type": "cortex-debug", 
+            "request": "launch",
+            "servertype": "openocd",
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/Debug/stm32.elf",
+            "configFiles": [
+                "${workspaceFolder}/stm32f103ze_stlink.cfg"
+            ],
+            "preLaunchTask": "Build STM32",
+            "postLaunchCommands": [
+                "monitor reset run",
+                "quit"
+            ]
+        }
+    ]
+}
