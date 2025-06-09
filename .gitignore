@@ -1,0 +1,49 @@
+# Build directories
+build/
+cmake-build-*/
+Release/
+Debug/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# Object files
+*.o
+*.obj
+*.elf
+*.bin
+*.hex
+*.map
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Backup files
+*.bak
+*.backup
+
+# Temporary files
+*.tmp
+*.temp
