@@ -26,6 +26,9 @@
 extern "C" {
 #endif
 
+/* CLion IDE support */
+#include "clion_types.h"
+
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
 

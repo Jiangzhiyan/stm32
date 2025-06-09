@@ -64,6 +64,23 @@ The project uses CMake with a custom ARM toolchain file (`cmake/gcc-arm-none-eab
 ## CLion IDE Configuration
 
 ### Debug Configuration
+
+#### Option 1: ST-Link GDB Server (Recommended for CLion 2024.2+)
+**Type**: Embedded GDB Server
+- GDB Server: `/opt/homebrew/bin/st-util` (install with `brew install stlink`)
+- GDB Server args: `--listen_port 4242`
+- GDB: `/opt/ST/STM32CubeCLT_*/GNU-tools-for-STM32/bin/arm-none-eabi-gdb`
+- Target remote: `localhost:4242`
+- Download: ✅ (auto-download to chip)
+- Reset commands: `monitor reset init`
+
+**Advantages**:
+- Native support in CLion 2024.2+
+- Live variable watches during debugging
+- Better integration with CLion's debugging features
+- No need for OpenOCD configuration files
+
+#### Option 2: OpenOCD (Legacy)
 **Type**: OpenOCD Download & Run
 - Board config file: `$ProjectFileDir$/stm32f103ze_stlink.cfg`
 - Download: ✅ (auto-download to chip)
@@ -77,6 +94,21 @@ This project supports both **CLion** and **VS Code**:
 - Use configurations in `.idea/runConfigurations/`
 - Debug with "OpenOCD Download & Run" 
 - Flash with "External Tool"
+
+#### Fixing CLion Red Marks/Errors
+If CLion shows red marks for standard types like `uint32_t`:
+
+1. **Update Toolchain** (Settings → Build, Execution, Deployment → Toolchains):
+   - C Compiler: `/opt/ST/STM32CubeCLT_1.18.0/GNU-tools-for-STM32/bin/arm-none-eabi-gcc`
+   - C++ Compiler: `/opt/ST/STM32CubeCLT_1.18.0/GNU-tools-for-STM32/bin/arm-none-eabi-g++`
+
+2. **Enable Clangd** (Settings → Languages & Frameworks → C/C++ → Clangd):
+   - Enable "Use clangd-based language engine"
+   - Project includes `.clangd` configuration for ARM target
+
+3. **Reload CMake Project**: Tools → CMake → Reload CMake Project
+
+4. **Restart CLion** to apply all changes
 
 **VS Code Users**:  
 - Install "Cortex-Debug" extension
@@ -112,7 +144,10 @@ find /opt -name "arm-none-eabi-gdb" 2>/dev/null
 3. Use run button (▶️) for flash-only operations
 
 ### Required Tools
-- **arm-none-eabi-gcc**: ARM GCC toolchain (must be in PATH)
+- **arm-none-eabi-gcc**: ARM GCC toolchain - **MUST use ST-provided toolchain from STM32CubeCLT**
+  - Located at: `/opt/ST/STM32CubeCLT_*/GNU-tools-for-STM32/bin/`
+  - Add to PATH: `export PATH="/opt/ST/STM32CubeCLT_1.18.0/GNU-tools-for-STM32/bin:$PATH"`
+  - **DO NOT use homebrew ARM GCC** - it has incompatible headers for macOS
 - **CMake**: Version 3.22+
 - **Ninja**: Build system (or use Make)
 - **OpenOCD**: For ST-Link communication (`brew install openocd`)
