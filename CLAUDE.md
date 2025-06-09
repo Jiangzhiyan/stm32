@@ -61,6 +61,38 @@ The project uses CMake with a custom ARM toolchain file (`cmake/gcc-arm-none-eab
 - **main.h**: Pin definitions (LED0 on PB5)
 - **stm32f1xx_hal_conf.h**: HAL module enable/disable configuration
 
+## CLion IDE Configuration
+
+### Debug Configuration (🐛 button)
+**Type**: Embedded GDB Server
+- GDB Server: `/opt/homebrew/bin/openocd`
+- GDB Server args: `-f stm32f103ze_stlink.cfg`
+- GDB: `/opt/ST/STM32CubeCLT_*/GNU-tools-for-STM32/bin/arm-none-eabi-gdb`
+- Target remote: `tcp:localhost:3333`
+- Startup Commands:
+  ```
+  monitor reset halt
+  load
+  monitor reset halt
+  break main
+  continue
+  ```
+
+### Flash Configuration (▶️ button)
+**Type**: External Tool
+- Program: `/opt/homebrew/bin/openocd`
+- Arguments: `-f stm32f103ze_stlink.cfg -c "init; reset halt; flash write_image erase build/Debug/stm32.elf; reset run; exit"`
+
+### Prerequisites for CLion
+```bash
+# Install OpenOCD
+brew install openocd
+
+# Verify paths
+which openocd  # Should show /opt/homebrew/bin/openocd
+find /opt -name "arm-none-eabi-gdb" 2>/dev/null
+```
+
 ## Development Workflow
 
 ### Adding User Code
@@ -74,8 +106,15 @@ The project uses CMake with a custom ARM toolchain file (`cmake/gcc-arm-none-eab
 3. Generate code (Project Manager → Project → Generate Code)
 4. Rebuild the project
 
+### Debugging with CLion
+1. Connect ST-Link to STM32 board and Mac
+2. Click debug button (🐛) or press `Shift+F9`
+3. Use run button (▶️) for flash-only operations
+
 ### Required Tools
 - **arm-none-eabi-gcc**: ARM GCC toolchain (must be in PATH)
 - **CMake**: Version 3.22+
 - **Ninja**: Build system (or use Make)
+- **OpenOCD**: For ST-Link communication (`brew install openocd`)
 - **STM32CubeMX**: For peripheral configuration
+- **ST-Link**: Hardware debugger/programmer
