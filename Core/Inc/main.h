@@ -26,9 +26,6 @@
 extern "C" {
 #endif
 
-/* CLion IDE support */
-#include "clion_types.h"
-
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f1xx_hal.h"
 
@@ -60,8 +57,14 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define LED0_Pin GPIO_PIN_5
-#define LED0_GPIO_Port GPIOB
+#define KEY1_Pin GPIO_PIN_3
+#define KEY1_GPIO_Port GPIOE
+#define KEY0_Pin GPIO_PIN_4
+#define KEY0_GPIO_Port GPIOE
+#define WK_UP_Pin GPIO_PIN_0
+#define WK_UP_GPIO_Port GPIOA
+#define LCD_BL_Pin GPIO_PIN_0
+#define LCD_BL_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
 

@@ -48,7 +48,15 @@ arm-none-eabi-size build/Debug/stm32.elf
 - **Core/**: Application code with STM32CubeMX-generated structure
   - User code goes between `/* USER CODE BEGIN */` and `/* USER CODE END */` markers
   - Main application loop in `main.c`
-- **Drivers/**: STM32 HAL and CMSIS libraries (do not modify)
+- **Drivers/**: STM32 HAL libraries and custom BSP drivers
+  - **HAL_Driver/**: STM32 HAL and CMSIS libraries (do not modify)
+  - **BSP/**: Board Support Package with LCD, key, and system drivers
+    - `lcd.c/lcd.h`: LCD driver supporting multiple ICs (ILI9341, ST7789, NT35310, etc.)
+    - `key.c/key.h`: Key input handling
+    - `lcd_ex.c`: Extended LCD initialization routines for different driver ICs
+  - **SYSTEM/**: System utilities from ALIENTEK
+    - `delay/`: Precise delay functions compatible with RTOS
+    - `sys/`: System configuration and clock initialization
 - **cmake/stm32cubemx/**: Auto-generated CMake configuration from STM32CubeMX
 - **stm32.ioc**: STM32CubeMX project file - regenerate code with STM32CubeMX if peripheral configuration changes
 
@@ -58,8 +66,36 @@ The project uses CMake with a custom ARM toolchain file (`cmake/gcc-arm-none-eab
 ### Key Files
 - **STM32F103XX_FLASH.ld**: Linker script defining memory layout
 - **startup_stm32f103xe.s**: MCU startup code and vector table
-- **main.h**: Pin definitions (LED0 on PB5)
+- **main.h**: Pin definitions (LCD_BL on PB0, KEY0/KEY1 on PE4/PE3, WK_UP on PA0)
 - **stm32f1xx_hal_conf.h**: HAL module enable/disable configuration
+
+## Hardware Configuration
+
+### Peripheral Interfaces
+- **FSMC (Flexible Static Memory Controller)**: Bank4 configured for LCD interface
+  - Address: 0x6C000000 (LCD register), 0x6C000800 (LCD data)
+  - 16-bit data bus with optimized timing for LCD communication
+  - Configured via GPIO pins on ports D, E, and G
+- **ADC3**: Analog-to-digital conversion
+- **DAC**: Digital-to-analog conversion  
+- **TIM6**: Timer for periodic operations
+- **USART1**: Serial communication for debugging
+
+### LCD Interface
+The project uses FSMC Bank4 to interface with TFT LCD displays. The LCD driver supports multiple controller ICs:
+- ILI9341 (common 2.8" displays)
+- ST7789 (newer displays with improved performance)
+- NT35310 (3.5" and larger displays)
+- ST7796 (4.0" displays)
+- ILI9806 (budget displays)
+- SSD1963 (large displays, 7" and above)
+
+LCD communication uses memory-mapped registers:
+```c
+#define LCD_BASE    0x6C000000
+#define LCD_REG     *((volatile uint16_t *)(LCD_BASE))
+#define LCD_RAM     *((volatile uint16_t *)(LCD_BASE + 0x800))
+```
 
 ## CLion IDE Configuration
 
@@ -129,8 +165,9 @@ find /opt -name "arm-none-eabi-gdb" 2>/dev/null
 
 ### Adding User Code
 1. Place code between designated USER CODE markers to preserve it during STM32CubeMX regeneration
-2. Add new source files to `CMakeLists.txt` in the `target_sources()` section
+2. Add new source files to `cmake/stm32cubemx/CMakeLists.txt` in the `target_sources()` section
 3. Add include paths to `target_include_directories()` if needed
+4. BSP drivers go in `Drivers/BSP/` directory with corresponding includes in the build system
 
 ### Modifying Peripherals
 1. Open `stm32.ioc` in STM32CubeMX
@@ -142,6 +179,14 @@ find /opt -name "arm-none-eabi-gdb" 2>/dev/null
 1. Connect ST-Link to STM32 board and Mac
 2. Click debug button (🐛) or press `Shift+F9`
 3. Use run button (▶️) for flash-only operations
+
+### LCD Debugging
+If LCD shows white screen with no output:
+1. Verify FSMC communication with basic read/write tests to 0x6C000000
+2. Check LCD backlight control (PB0 pin)
+3. Test multiple LCD driver IC initialization sequences in `lcd_ex.c`
+4. Use backlight flashing for communication status indication (no external tools needed)
+5. Confirm LCD module specifications match the driver IC initialization in use
 
 ### Required Tools
 - **arm-none-eabi-gcc**: ARM GCC toolchain - **MUST use ST-provided toolchain from STM32CubeCLT**
